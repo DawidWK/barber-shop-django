@@ -1,0 +1,138 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="choosing-page">
+  <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bookModalLabel"> Enter informations </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="/add-client/" method="POST">
+            {% csrf_token %}
+            {{ new_client_form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" onclick="this.disabled=true; this.form.submit();" class="btn btn-primary" value="submit">Save changes</button>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-title">
+    <h1 class="leading-font">{{ barber.name }}'S SCHEDULE</h1>
+  </div>
+  <div class="container">
+
+    <div id="schedule-wrapper">
+      {% if confirmed %} 
+      <div class="alert-wrapper">
+        <div class="alert alert-success" role="alert">
+          <h1>Reservation has been confirmed</h1>
+        </div>
+      </div>
+      {% endif %}
+      <!-- RENDER IN JS -->
+    </div>
+  </div>
+</section>
+
+<script>
+  let schedule_wrapper = document.querySelector('#schedule-wrapper');
+  let schedule = '{{ schedule | safe }}';
+  let clicked = 0;
+
+  // first and last characters are dubble quotes, no idea how they came there but thats a quick fix for this.
+  schedule = schedule.slice(1, -1);
+  let JSON_schedule = JSON.parse(schedule);
+  let first = parseInt("{{ barber.start_time }}");
+  let last = first + 8;
+  let x = first;
+
+  let barber_options = document.querySelectorAll('#id_barber option')
+  let bookId = document.querySelector('#id_start_time')
+  let barber_name = document.querySelector('#id_barber')
+  
+  // delete default "--------" option, and selects proper barber
+  barber_name.remove(barber_name.selectedIndex)
+  barber_name.value = "{{ barber.id }}"
+
+  for(; x < last; x++){
+    let hour = document.createElement('div');
+    let link = document.createElement('a');
+ 
+    link.className = 'schedule-link';
+    hour.className = 'schedule-hour';
+    hour.appendChild(link);
+
+    if(!isAvaliable(x)) {
+      hour.classList.add("busy");
+    }
+    else {
+      hour.classList.add("avaliable");
+      hour.dataset.bsToggle = "modal";
+      hour.dataset.bsTarget = "#bookModal";
+      hour.setAttribute('onclick', 'passToModal(' + x + ')');
+    }
+    link.innerHTML = `<h1>` + x + `</h1>`;
+
+    schedule_wrapper.appendChild(hour);
+  }
+
+  barber_options.forEach(function(element) {
+    if(!(element.value == "{{ barber.id }}"))
+    {
+      if(element.selected){
+        element.selected = false
+      }
+      element.disabled = true
+    }
+    else {
+      element.selected = true
+    }
+    
+  
+  });  
+
+  // hides alert
+  setTimeout(hideAlert, 2800)
+
+  function hideAlert()
+  {
+    let alert = document.querySelector('.alert-wrapper')
+    try {
+      alert.remove()
+    }
+    catch (e){
+      null
+    }
+
+  }
+
+  function isAvaliable(hour) 
+  {
+    for(let schedule_hour in JSON_schedule.schedule_day) {
+      if(hour >= JSON_schedule.schedule_day[schedule_hour].start){
+        if(hour < JSON_schedule.schedule_day[schedule_hour].end){
+          return true;
+        }
+      }
+      else {
+        return false;
+      }
+    }
+    return false;
+  }
+
+  function passToModal(hour)
+  {
+    bookId.value = hour
+    
+  }
+
+</script>
+{% endblock content %}

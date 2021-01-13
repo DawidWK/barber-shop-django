@@ -1,0 +1,27 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="choosing-page">
+    <div class="page-title">
+        <h1 class="leading-font">CHOOSE YOUR BARBER</h1>
+    </div>
+
+    <div class="container">
+        <div id="barbers-wrapper">
+            {% for barber in barbers %}
+                <div class=barber>
+                    <a href="{{barber.id}}">
+                        <div class="barber-photo">
+                            <img src="{{ barber.photo.url }}">
+                        </div>
+                        <div class="barber-name">
+                            <h1 class="leading-font">{{ barber.name }}</h1>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock content %}
